@@ -1,0 +1,228 @@
+package main;  
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
+
+/**
+ * 기존 깃허브 시계 UI와 레이아웃 스타일을 참고한 MainFrame 구현
+ */
+public class MainFrame extends JFrame {
+
+    // 시작 화면 컴포넌트
+    private JPanel startPanel;
+    private JButton startButton;
+    private JLabel titleLabel;
+    private JTextArea descriptionArea;
+
+    // 메인 화면 컴포넌트
+    private ClockPanel clockPanel;       // 기존 깃허브 시계 컴포넌트
+    private JPanel chatbotPanel;         // 챗봇 이미지 및 제목 영역
+
+
+    private JPanel upperEmptyPanel;      // 중앙 위 빈 화면
+    private JTabbedPane lowerTabbedPane; // 중앙 아래 탭 2개
+
+    private JSplitPane centerSplitPane;  // 중앙 영역 수직 분할
+
+    private CardLayout mainCardLayout;
+    private JPanel mainPanel;            // 전체 화면 카드 레이아웃
+
+    // 색상 통일 
+    private final Color bgColor = new Color(214, 240, 255);
+    private final Color borderColor = new Color(144, 198, 224);
+    private final Color textColor = new Color(48, 80, 96);
+
+    public MainFrame() {
+        setTitle("대학생 관리 시스템");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1200, 850);
+        setLocationRelativeTo(null);
+
+        mainCardLayout = new CardLayout();
+        mainPanel = new JPanel(mainCardLayout);
+        mainPanel.setBackground(bgColor);
+
+        createStartPanel();
+        createMainPanel();
+
+        mainPanel.add(startPanel, "start");
+        mainPanel.add(createMainScreenPanel(), "main");
+
+        add(mainPanel);
+
+        mainCardLayout.show(mainPanel, "start");
+    }
+
+    private void createStartPanel() {
+        startPanel = new JPanel(new BorderLayout(10, 10));
+        startPanel.setBorder(new EmptyBorder(30, 30, 30, 30));
+        startPanel.setBackground(bgColor);
+
+        titleLabel = new JLabel("대학생 관리 시스템", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 36));
+        titleLabel.setForeground(textColor);
+        titleLabel.setBorder(new EmptyBorder(10, 0, 20, 0));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        descriptionArea = new JTextArea(
+                "이 프로그램은 대학생들의 일정, 메모, 체크리스트를 관리하는 시스템입니다.\n" +
+                "효율적인 시간 관리와 목표 달성을 도와줍니다."
+        );
+        descriptionArea.setEditable(false);
+        descriptionArea.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
+        descriptionArea.setForeground(textColor);
+        descriptionArea.setBackground(bgColor);
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setBorder(new EmptyBorder(0, 10, 0, 10));
+        descriptionArea.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 이미지 삽입
+        JLabel imageLabel = new JLabel();
+        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/images/noonsong.png"));
+        Image image = imageIcon.getImage().getScaledInstance(381, 426, Image.SCALE_SMOOTH);
+        imageLabel.setIcon(new ImageIcon(image));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 시작 버튼
+        startButton = new JButton("시작하기");
+        startButton.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        startButton.setPreferredSize(new Dimension(150, 50));
+        startButton.addActionListener(e -> mainCardLayout.show(mainPanel, "main"));
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(bgColor);
+        buttonPanel.add(startButton);
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 세로로 배치
+        Box centerBox = Box.createVerticalBox();
+        centerBox.setBackground(bgColor); // 일부 레이아웃 오류 방지용
+        centerBox.add(titleLabel);
+        centerBox.add(Box.createVerticalStrut(10));
+        centerBox.add(descriptionArea);
+        centerBox.add(Box.createVerticalStrut(10));
+        centerBox.add(imageLabel); // ✅ 설명 아래에 이미지!
+        centerBox.add(Box.createVerticalStrut(20));
+
+        startPanel.add(centerBox, BorderLayout.CENTER);   // 중앙에 세로 박스
+        startPanel.add(buttonPanel, BorderLayout.SOUTH);  // 버튼은 아래
+    }
+
+
+    private void createMainPanel() {
+        // 시계 패널
+        clockPanel = new ClockPanel();
+        clockPanel.setPreferredSize(new Dimension(250, 250));
+        clockPanel.setBorder(BorderFactory.createEmptyBorder());
+        clockPanel.setBackground(bgColor);
+
+        // 챗봇 패널
+        chatbotPanel = new JPanel(new BorderLayout());
+        chatbotPanel.setPreferredSize(new Dimension(300, 600)); 
+        chatbotPanel.setBackground(bgColor);
+        chatbotPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
+
+        JPanel chatbotContent = new JPanel();
+        chatbotContent.setOpaque(false);
+        chatbotContent.setBackground(bgColor);
+        chatbotContent.setBorder(null); 
+
+        chatbotPanel.add(chatbotContent, BorderLayout.CENTER);
+
+        // 중앙 위 빈 화면
+        upperEmptyPanel = new JPanel();
+        upperEmptyPanel.setOpaque(false);
+        upperEmptyPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
+
+        upperEmptyPanel.setBackground(new Color(245, 240, 220));
+
+        // 중앙 아래 탭
+        lowerTabbedPane = new JTabbedPane();
+        lowerTabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        lowerTabbedPane.addTab("체크리스트", new JPanel());
+        lowerTabbedPane.addTab("메모장", new JPanel());
+        lowerTabbedPane.setBackground(new Color(245, 240, 220));
+        lowerTabbedPane.setForeground(textColor);
+
+        // 중앙 4:3 분할
+        centerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, upperEmptyPanel, lowerTabbedPane);
+        centerSplitPane.setResizeWeight(0.57);
+        centerSplitPane.setDividerSize(6);
+        centerSplitPane.setOneTouchExpandable(true);
+        centerSplitPane.setBorder(null);
+        centerSplitPane.setBackground(bgColor);
+    }
+
+    private JPanel createMainScreenPanel() {
+        JPanel mainScreen = new JPanel(new BorderLayout(15, 15));
+        mainScreen.setBorder(new EmptyBorder(15, 15, 15, 15));
+        mainScreen.setBackground(bgColor);
+
+        // 챗봇 + 프로그램 제목 아래 붙이기
+        Box rightBox = Box.createVerticalBox();
+        rightBox.setBackground(bgColor);
+
+        rightBox.add(chatbotPanel); // 위: 챗봇
+        rightBox.add(Box.createVerticalStrut(15)); // 간격
+
+        JLabel programTitle = new JLabel("대학생 관리 시스템", SwingConstants.CENTER); // ✅ 아래 제목
+        programTitle.setFont(new Font("맑은 고딕", Font.BOLD, 20));
+        programTitle.setForeground(textColor);
+        programTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        rightBox.add(programTitle); // 아래: 제목
+
+        mainScreen.add(clockPanel, BorderLayout.WEST);
+        mainScreen.add(centerSplitPane, BorderLayout.CENTER);
+        mainScreen.add(rightBox, BorderLayout.EAST); // ✅ 묶어서 추가
+
+        return mainScreen;
+    }
+
+}
+
+/**
+ * 진서님 ui참고해서 ClockPanel 구현
+ */
+class ClockPanel extends JPanel {
+    private JLabel dateLabel;
+    private JLabel timeLabel;
+
+    public ClockPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(new Color(214, 240, 255)); // 파스텔 하늘색
+
+        dateLabel = new JLabel("", SwingConstants.CENTER);
+        dateLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 20));
+        dateLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        dateLabel.setForeground(new Color(48, 80, 96));
+
+        timeLabel = new JLabel("", SwingConstants.CENTER);
+        timeLabel.setFont(new Font("맑은 고딕", Font.BOLD, 48));
+        timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        timeLabel.setForeground(new Color(48, 80, 96));
+
+        add(Box.createVerticalStrut(200));      // ← 원하는 만큼 위에 여백 조정
+        add(dateLabel);
+        add(Box.createVerticalStrut(10));      // ← 날짜와 시계 사이 여백
+        add(timeLabel);
+        add(Box.createVerticalGlue());         // 남는 공간은 아래로 밀어냄
+
+        Timer timer = new Timer(1000, e -> updateTime());
+        timer.start();
+
+        updateTime();
+    }
+
+    private void updateTime() {
+        java.time.LocalDate date = java.time.LocalDate.now();
+        java.time.LocalTime time = java.time.LocalTime.now().withNano(0);
+
+        dateLabel.setText(date.toString());
+        timeLabel.setText(time.toString());
+    }
+}

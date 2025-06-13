@@ -1,9 +1,11 @@
-package main;  
+package main;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import calendar.CalendarPanel;
+import main.AppState;
 
 /**
  * 기존 깃허브 시계 UI와 레이아웃 스타일을 참고한 MainFrame 구현
@@ -20,8 +22,7 @@ public class MainFrame extends JFrame {
     private ClockPanel clockPanel;       // 기존 깃허브 시계 컴포넌트
     private JPanel chatbotPanel;         // 챗봇 이미지 및 제목 영역
 
-
-    private JPanel upperEmptyPanel;      // 중앙 위 빈 화면
+    private JPanel calendarPanelContainer;      // 중앙 위 캘린더 화면 (기존 upperEmptyPanel)
     private JTabbedPane lowerTabbedPane; // 중앙 아래 탭 2개
 
     private JSplitPane centerSplitPane;  // 중앙 영역 수직 분할
@@ -29,7 +30,7 @@ public class MainFrame extends JFrame {
     private CardLayout mainCardLayout;
     private JPanel mainPanel;            // 전체 화면 카드 레이아웃
 
-    // 색상 통일 
+    // 색상 통일
     private final Color bgColor = new Color(214, 240, 255);
     private final Color borderColor = new Color(144, 198, 224);
     private final Color textColor = new Color(48, 80, 96);
@@ -51,7 +52,6 @@ public class MainFrame extends JFrame {
         mainPanel.add(createMainScreenPanel(), "main");
 
         add(mainPanel);
-
         mainCardLayout.show(mainPanel, "start");
     }
 
@@ -68,7 +68,7 @@ public class MainFrame extends JFrame {
 
         descriptionArea = new JTextArea(
                 "이 프로그램은 대학생들의 일정, 메모, 체크리스트를 관리하는 시스템입니다.\n" +
-                "효율적인 시간 관리와 목표 달성을 도와줍니다."
+                        "효율적인 시간 관리와 목표 달성을 도와줍니다."
         );
         descriptionArea.setEditable(false);
         descriptionArea.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
@@ -112,8 +112,15 @@ public class MainFrame extends JFrame {
         startPanel.add(buttonPanel, BorderLayout.SOUTH);  // 버튼은 아래
     }
 
-
     private void createMainPanel() {
+        // 중앙 아래 탭 먼저 초기화!
+        lowerTabbedPane = new JTabbedPane();
+        lowerTabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        lowerTabbedPane.addTab("체크리스트", new JPanel());
+        lowerTabbedPane.addTab("메모장", new JPanel());
+        lowerTabbedPane.setBackground(new Color(245, 240, 220));
+        lowerTabbedPane.setForeground(textColor);
+
         // 시계 패널
         clockPanel = new ClockPanel();
         clockPanel.setPreferredSize(new Dimension(250, 250));
@@ -122,34 +129,30 @@ public class MainFrame extends JFrame {
 
         // 챗봇 패널
         chatbotPanel = new JPanel(new BorderLayout());
-        chatbotPanel.setPreferredSize(new Dimension(300, 600)); 
+        chatbotPanel.setPreferredSize(new Dimension(300, 600));
         chatbotPanel.setBackground(bgColor);
         chatbotPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
 
         JPanel chatbotContent = new JPanel();
         chatbotContent.setOpaque(false);
         chatbotContent.setBackground(bgColor);
-        chatbotContent.setBorder(null); 
-
+        chatbotContent.setBorder(null);
         chatbotPanel.add(chatbotContent, BorderLayout.CENTER);
 
-        // 중앙 위 빈 화면
-        upperEmptyPanel = new JPanel();
-        upperEmptyPanel.setOpaque(false);
-        upperEmptyPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
+        // 중앙 캘린더 영역
+        calendarPanelContainer = new JPanel();
+        calendarPanelContainer.setOpaque(false);
+        calendarPanelContainer.setBorder(BorderFactory.createLineBorder(borderColor, 2));
+        calendarPanelContainer.setBackground(new Color(245, 240, 220));
+        calendarPanelContainer.setLayout(new BorderLayout());
 
-        upperEmptyPanel.setBackground(new Color(245, 240, 220));
-
-        // 중앙 아래 탭
-        lowerTabbedPane = new JTabbedPane();
-        lowerTabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
-        lowerTabbedPane.addTab("체크리스트", new JPanel());
-        lowerTabbedPane.addTab("메모장", new JPanel());
-        lowerTabbedPane.setBackground(new Color(245, 240, 220));
-        lowerTabbedPane.setForeground(textColor);
+        // CalendarPanel에 tabbedPane 전달
+        CalendarPanel calendarPanel = new CalendarPanel(lowerTabbedPane);
+        calendarPanel.setOpaque(false);
+        calendarPanelContainer.add(calendarPanel, BorderLayout.CENTER);
 
         // 중앙 4:3 분할
-        centerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, upperEmptyPanel, lowerTabbedPane);
+        centerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, calendarPanelContainer, lowerTabbedPane);
         centerSplitPane.setResizeWeight(0.57);
         centerSplitPane.setDividerSize(6);
         centerSplitPane.setOneTouchExpandable(true);
@@ -166,23 +169,22 @@ public class MainFrame extends JFrame {
         Box rightBox = Box.createVerticalBox();
         rightBox.setBackground(bgColor);
 
-        rightBox.add(chatbotPanel); // 위: 챗봇
-        rightBox.add(Box.createVerticalStrut(15)); // 간격
+        rightBox.add(chatbotPanel);
+        rightBox.add(Box.createVerticalStrut(15));
 
-        JLabel programTitle = new JLabel("대학생 관리 시스템", SwingConstants.CENTER); // ✅ 아래 제목
+        JLabel programTitle = new JLabel("대학생 관리 시스템", SwingConstants.CENTER);
         programTitle.setFont(new Font("맑은 고딕", Font.BOLD, 20));
         programTitle.setForeground(textColor);
         programTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        rightBox.add(programTitle); // 아래: 제목
+        rightBox.add(programTitle);
 
         mainScreen.add(clockPanel, BorderLayout.WEST);
         mainScreen.add(centerSplitPane, BorderLayout.CENTER);
-        mainScreen.add(rightBox, BorderLayout.EAST); // ✅ 묶어서 추가
+        mainScreen.add(rightBox, BorderLayout.EAST);
 
         return mainScreen;
     }
-
 }
 
 /**
@@ -194,7 +196,7 @@ class ClockPanel extends JPanel {
 
     public ClockPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(214, 240, 255)); // 파스텔 하늘색
+        setBackground(new Color(214, 240, 255));
 
         dateLabel = new JLabel("", SwingConstants.CENTER);
         dateLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 20));
@@ -206,11 +208,11 @@ class ClockPanel extends JPanel {
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timeLabel.setForeground(new Color(48, 80, 96));
 
-        add(Box.createVerticalStrut(200));      // ← 원하는 만큼 위에 여백 조정
+        add(Box.createVerticalStrut(200));
         add(dateLabel);
-        add(Box.createVerticalStrut(10));      // ← 날짜와 시계 사이 여백
+        add(Box.createVerticalStrut(10));
         add(timeLabel);
-        add(Box.createVerticalGlue());         // 남는 공간은 아래로 밀어냄
+        add(Box.createVerticalGlue());
 
         Timer timer = new Timer(1000, e -> updateTime());
         timer.start();
@@ -226,3 +228,4 @@ class ClockPanel extends JPanel {
         timeLabel.setText(time.toString());
     }
 }
+

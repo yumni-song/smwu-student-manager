@@ -12,14 +12,14 @@ public class AppState {
     // 싱글톤 인스턴스
     private static AppState instance = null;
 
-    // 현재 달력에서 선택된 날짜
-    public LocalDate selectedDate;
+    // 모든 클래스에서 접근 가능하게 한 날짜 저장소
+    public static LocalDate selectedDate = LocalDate.now();
 
     // 날짜별 체크리스트 목록 저장 (예: 2025-06-09 → [할일1, 할일2, ...])
-    public Map<LocalDate, List<TodoItem>> todoMap;
+    public Map<LocalDate, List<TodoItem>> todoMap= new HashMap<>();
 
     // 날짜별 메모 내용 저장 (예: 2025-06-09 → "오늘 회의함")
-    public Map<LocalDate, String> memoMap;
+    public Map<LocalDate, String> memoMap = new HashMap<>();
 
     /**
      * 생성자 - 외부에서 호출하지 못하도록 private 처리.

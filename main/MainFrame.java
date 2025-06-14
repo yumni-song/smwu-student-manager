@@ -2,13 +2,15 @@ package main;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.time.LocalDate;
+
 import calendar.CalendarPanel;
-import main.AppState;
+import checklist.TodoItem;
+import chatbot.ChatbotPanel;
 
 /**
- * 기존 깃허브 시계 UI와 레이아웃 스타일을 참고한 MainFrame 구현
+ * 대학생 관리 시스템 MainFrame
  */
 public class MainFrame extends JFrame {
 
@@ -19,18 +21,18 @@ public class MainFrame extends JFrame {
     private JTextArea descriptionArea;
 
     // 메인 화면 컴포넌트
-    private ClockPanel clockPanel;       // 기존 깃허브 시계 컴포넌트
-    private JPanel chatbotPanel;         // 챗봇 이미지 및 제목 영역
+    private ClockPanel clockPanel;
+    private ChatbotPanel chatbotPanel;
 
-    private JPanel calendarPanelContainer;      // 중앙 위 캘린더 화면 (기존 upperEmptyPanel)
-    private JTabbedPane lowerTabbedPane; // 중앙 아래 탭 2개
+    private JPanel calendarPanelContainer;
+    private JTabbedPane lowerTabbedPane;
+    private TodoItem todoItem;
+    private CalendarPanel calendarPanel;
 
-    private JSplitPane centerSplitPane;  // 중앙 영역 수직 분할
-
+    private JSplitPane centerSplitPane;
     private CardLayout mainCardLayout;
-    private JPanel mainPanel;            // 전체 화면 카드 레이아웃
+    private JPanel mainPanel;
 
-    // 색상 통일
     private final Color bgColor = new Color(214, 240, 255);
     private final Color borderColor = new Color(144, 198, 224);
     private final Color textColor = new Color(48, 80, 96);
@@ -81,9 +83,15 @@ public class MainFrame extends JFrame {
 
         // 이미지 삽입
         JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/images/noonsong.png"));
-        Image image = imageIcon.getImage().getScaledInstance(381, 426, Image.SCALE_SMOOTH);
-        imageLabel.setIcon(new ImageIcon(image));
+        try {
+            ImageIcon imageIcon = new ImageIcon(getClass().getResource("/images/noonsong.png"));
+            Image image = imageIcon.getImage().getScaledInstance(381, 426, Image.SCALE_SMOOTH);
+            imageLabel.setIcon(new ImageIcon(image));
+        } catch (Exception e) {
+            // 이미지 로드 실패 시 텍스트로 대체
+            imageLabel.setText("이미지를 불러올 수 없습니다");
+            imageLabel.setForeground(textColor);
+        }
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -100,26 +108,47 @@ public class MainFrame extends JFrame {
 
         // 세로로 배치
         Box centerBox = Box.createVerticalBox();
-        centerBox.setBackground(bgColor); // 일부 레이아웃 오류 방지용
+        centerBox.setBackground(bgColor);
         centerBox.add(titleLabel);
         centerBox.add(Box.createVerticalStrut(10));
         centerBox.add(descriptionArea);
         centerBox.add(Box.createVerticalStrut(10));
-        centerBox.add(imageLabel); // ✅ 설명 아래에 이미지!
+        centerBox.add(imageLabel);
         centerBox.add(Box.createVerticalStrut(20));
 
-        startPanel.add(centerBox, BorderLayout.CENTER);   // 중앙에 세로 박스
-        startPanel.add(buttonPanel, BorderLayout.SOUTH);  // 버튼은 아래
+        startPanel.add(centerBox, BorderLayout.CENTER);
+        startPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private void createMainPanel() {
-        // 중앙 아래 탭 먼저 초기화!
+        // TodoItem 초기화
+        todoItem = new TodoItem();
+
+        // 메모장 패널 생성
+        JPanel memoPanel = new JPanel(new BorderLayout());
+        memoPanel.setBackground(Color.WHITE);
+        JTextArea memoArea = new JTextArea();
+        memoArea.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        memoArea.setLineWrap(true);
+        memoArea.setWrapStyleWord(true);
+        JScrollPane memoScrollPane = new JScrollPane(memoArea);
+        memoPanel.add(memoScrollPane, BorderLayout.CENTER);
+
+        // TodoItem에 메모 영역 등록
+        todoItem.setMemoArea(memoArea);
+
+        // 중앙 아래 탭 생성
         lowerTabbedPane = new JTabbedPane();
         lowerTabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
-        lowerTabbedPane.addTab("체크리스트", new JPanel());
-        lowerTabbedPane.addTab("메모장", new JPanel());
+        lowerTabbedPane.addTab("체크리스트", todoItem);  // TodoItem을 체크리스트 탭에 추가
+        lowerTabbedPane.addTab("메모장", memoPanel);
         lowerTabbedPane.setBackground(new Color(245, 240, 220));
         lowerTabbedPane.setForeground(textColor);
+
+        // 탭 변경 시에도 저장 (TodoItem에서 자동 처리됨)
+        lowerTabbedPane.addChangeListener(e -> {
+            // TodoItem이 알아서 처리하므로 별도 코드 불필요
+        });
 
         // 시계 패널
         clockPanel = new ClockPanel();
@@ -128,16 +157,10 @@ public class MainFrame extends JFrame {
         clockPanel.setBackground(bgColor);
 
         // 챗봇 패널
-        chatbotPanel = new JPanel(new BorderLayout());
+        chatbotPanel = new ChatbotPanel();
         chatbotPanel.setPreferredSize(new Dimension(300, 600));
         chatbotPanel.setBackground(bgColor);
         chatbotPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
-
-        JPanel chatbotContent = new JPanel();
-        chatbotContent.setOpaque(false);
-        chatbotContent.setBackground(bgColor);
-        chatbotContent.setBorder(null);
-        chatbotPanel.add(chatbotContent, BorderLayout.CENTER);
 
         // 중앙 캘린더 영역
         calendarPanelContainer = new JPanel();
@@ -146,8 +169,16 @@ public class MainFrame extends JFrame {
         calendarPanelContainer.setBackground(new Color(245, 240, 220));
         calendarPanelContainer.setLayout(new BorderLayout());
 
-        // CalendarPanel에 tabbedPane 전달
-        CalendarPanel calendarPanel = new CalendarPanel(lowerTabbedPane);
+        // CalendarPanel 생성 및 날짜 변경 이벤트 처리
+        calendarPanel = new CalendarPanel(lowerTabbedPane) {
+            @Override
+            protected void onDateChanged(LocalDate oldDate, LocalDate newDate) {
+                // 날짜가 변경되면 TodoItem에 알림
+                if (todoItem != null) {
+                    todoItem.onDateChanged(oldDate, newDate);
+                }
+            }
+        };
         calendarPanel.setOpaque(false);
         calendarPanelContainer.add(calendarPanel, BorderLayout.CENTER);
 
@@ -188,7 +219,7 @@ public class MainFrame extends JFrame {
 }
 
 /**
- * 진서님 ui참고해서 ClockPanel 구현
+ * 시계 + 스톱워치 패널
  */
 class ClockPanel extends JPanel {
     private JLabel dateLabel;
@@ -208,17 +239,19 @@ class ClockPanel extends JPanel {
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timeLabel.setForeground(new Color(48, 80, 96));
 
-        add(Box.createVerticalStrut(200));
+        add(Box.createVerticalGlue());           //  위 공간 확보
         add(dateLabel);
         add(Box.createVerticalStrut(10));
         add(timeLabel);
-        add(Box.createVerticalGlue());
+        add(Box.createVerticalStrut(20));
+        add(new StopwatchPanel());
+        add(Box.createVerticalGlue());           // 아래 공간 확보
 
         Timer timer = new Timer(1000, e -> updateTime());
         timer.start();
-
         updateTime();
     }
+
 
     private void updateTime() {
         java.time.LocalDate date = java.time.LocalDate.now();
@@ -229,3 +262,74 @@ class ClockPanel extends JPanel {
     }
 }
 
+/**
+ * 스톱워치 패널 (Thread 사용)
+ */
+class StopwatchPanel extends JPanel {
+    private JLabel timerLabel;
+    private JButton startButton, stopButton, resetButton;
+
+    private int seconds = 0;
+    private boolean running = false;
+    private Thread timerThread;
+
+    public StopwatchPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(new Color(214, 240, 255));
+
+        timerLabel = new JLabel("00:00", SwingConstants.CENTER);
+        timerLabel.setFont(new Font("맑은 고딕", Font.BOLD, 28));
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(new Color(214, 240, 255));
+
+        startButton = new JButton("시작");
+        stopButton = new JButton("정지");
+        resetButton = new JButton("리셋");
+
+        startButton.addActionListener(e -> start());
+        stopButton.addActionListener(e -> stop());
+        resetButton.addActionListener(e -> reset());
+
+        buttonPanel.add(startButton);
+        buttonPanel.add(stopButton);
+        buttonPanel.add(resetButton);
+
+        add(timerLabel);
+        add(Box.createVerticalStrut(5));
+        add(buttonPanel);
+    }
+
+    private void start() {
+        if (!running) {
+            running = true;
+            timerThread = new Thread(() -> {
+                while (running) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {}
+                    seconds++;
+                    SwingUtilities.invokeLater(this::updateLabel);
+                }
+            });
+            timerThread.start();
+        }
+    }
+
+    private void stop() {
+        running = false;
+    }
+
+    private void reset() {
+        running = false;
+        seconds = 0;
+        updateLabel();
+    }
+
+    private void updateLabel() {
+        int min = seconds / 60;
+        int sec = seconds % 60;
+        timerLabel.setText(String.format("%02d:%02d", min, sec));
+    }
+}

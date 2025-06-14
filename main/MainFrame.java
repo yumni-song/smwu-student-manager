@@ -6,6 +6,7 @@ import java.awt.*;
 import java.time.LocalDate;
 import calendar.CalendarPanel;
 import checklist.TodoItem;
+import chatbot.ChatbotPanel;
 
 /**
  * 기존 깃허브 시계 UI와 레이아웃 스타일을 참고한 MainFrame 구현
@@ -20,7 +21,7 @@ public class MainFrame extends JFrame {
 
     // 메인 화면 컴포넌트
     private ClockPanel clockPanel;       // 기존 깃허브 시계 컴포넌트
-    private JPanel chatbotPanel;         // 챗봇 이미지 및 제목 영역
+    private ChatbotPanel chatbotPanel;   // 챗봇 패널 참조
 
     private JPanel calendarPanelContainer;      // 중앙 위 캘린더 화면 (기존 upperEmptyPanel)
     private JTabbedPane lowerTabbedPane; // 중앙 아래 탭 2개
@@ -157,16 +158,10 @@ public class MainFrame extends JFrame {
         clockPanel.setBackground(bgColor);
 
         // 챗봇 패널
-        chatbotPanel = new JPanel(new BorderLayout());
+        chatbotPanel = new ChatbotPanel();
         chatbotPanel.setPreferredSize(new Dimension(300, 600));
         chatbotPanel.setBackground(bgColor);
         chatbotPanel.setBorder(BorderFactory.createLineBorder(borderColor, 2));
-
-        JPanel chatbotContent = new JPanel();
-        chatbotContent.setOpaque(false);
-        chatbotContent.setBackground(bgColor);
-        chatbotContent.setBorder(null);
-        chatbotPanel.add(chatbotContent, BorderLayout.CENTER);
 
         // 중앙 캘린더 영역
         calendarPanelContainer = new JPanel();

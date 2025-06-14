@@ -4,6 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 import main.AppState;
 
 /**
@@ -14,12 +18,28 @@ import main.AppState;
 
 
 
-public class CalendarPanel extends JPanel{
+public abstract class CalendarPanel extends JPanel{
     private final JLabel monthYearLabel; //현재 년/월 표시
     private final JLabel selectedDateLabel; //선택된 날짜 표시
     private final JPanel datePanel; //날짜 버튼들이 들어가 패널
     private int currentYear, currentMonth; //현재 보고 있는 년/월
-    private final JTabbedPane tabbedPane; //아래 탭
+    private final JTabbedPane tabbedPane;//아래 탭
+
+    // CalendarPanel.java 안에
+    private List<Consumer<LocalDate>> dateListeners = new ArrayList<>();
+
+    public void addDateClickListener(Consumer<LocalDate> listener) {
+        dateListeners.add(listener);
+    }
+
+    // 날짜 클릭 시 호출
+    private void notifyDateClicked(LocalDate date) {
+        for (Consumer<LocalDate> listener : dateListeners) {
+            listener.accept(date);
+        }
+    }
+
+
 
     //생성자
     public CalendarPanel(JTabbedPane tabbedPane){
@@ -38,11 +58,15 @@ public class CalendarPanel extends JPanel{
         //Today Button : 오늘 날짜로 이동
         JButton todayBtn = new JButton("Today");
         todayBtn.addActionListener(e ->{
+            LocalDate oldDate = AppState.selectedDate;
             AppState.selectedDate = LocalDate.now();
             currentYear = AppState.selectedDate.getYear();
             currentMonth = AppState.selectedDate.getMonthValue();
             updateCalendar();
             selectedDateLabel.setText(AppState.selectedDate.toString());
+
+            // 날짜 변경 콜백 호출
+            onDateChanged(oldDate, AppState.selectedDate);
         });
 
 
@@ -137,6 +161,7 @@ public class CalendarPanel extends JPanel{
                 //날짜 클릭하면 배경색 갱신
                 @Override
                 public void mouseClicked(MouseEvent e) {
+                    LocalDate oldDate = AppState.selectedDate;
                     AppState.selectedDate = date;
                     selectedDateLabel.setText(date.toString());
                     updateCalendar();
@@ -145,6 +170,9 @@ public class CalendarPanel extends JPanel{
                     if(tabbedPane != null){
                         tabbedPane.setSelectedIndex(0);
                     }
+
+                    // 날짜 변경 콜백 호출
+                    onDateChanged(oldDate, AppState.selectedDate);
                 }
 
                 //마우스 올릴 시 파랑색
@@ -168,4 +196,6 @@ public class CalendarPanel extends JPanel{
         revalidate();
         repaint();
     }
+
+    protected abstract void onDateChanged(LocalDate oldDate, LocalDate newDate);
 }

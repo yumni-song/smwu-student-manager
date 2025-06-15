@@ -219,6 +219,7 @@ public class TodoItem extends JPanel implements ActionListener {
             } else {
                 System.out.println("사용자가 입력 취소");
             }
+        saveMemoData();     // 모든 이벤트 발생시 할일 내역 저장
         }
     }
 

@@ -449,15 +449,6 @@ public class TodoItem extends JPanel implements ActionListener {
         refreshUI();
     }
 
-    public List<TodoData> getTodoList() {
-        return new ArrayList<>(todoList);
-    }
-
-    // 기존 saveMemo, loadMemo 메서드는 내부적으로 사용되도록 변경
-    public void saveMemo(String memo) {
-        saveMemoData();
-    }
-
     public String loadMemo() {
         try {
             JSONObject allData = loadAllData();

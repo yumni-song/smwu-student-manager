@@ -142,7 +142,7 @@ public class MainFrame extends JFrame {
         lowerTabbedPane = new JTabbedPane();
         lowerTabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
         lowerTabbedPane.addTab("체크리스트", todoItem);  // TodoItem을 체크리스트 탭에 추가
-        lowerTabbedPane.addTab("메모장", memoPanel);
+        lowerTabbedPane.addTab("일기장", memoPanel);
         lowerTabbedPane.setBackground(new Color(245, 240, 220));
         lowerTabbedPane.setForeground(textColor);
 

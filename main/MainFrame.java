@@ -4,12 +4,13 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.time.LocalDate;
+
 import calendar.CalendarPanel;
 import checklist.TodoItem;
 import chatbot.ChatbotPanel;
 
 /**
- * 기존 깃허브 시계 UI와 레이아웃 스타일을 참고한 MainFrame 구현
+ * 대학생 관리 시스템 MainFrame
  */
 public class MainFrame extends JFrame {
 
@@ -20,20 +21,18 @@ public class MainFrame extends JFrame {
     private JTextArea descriptionArea;
 
     // 메인 화면 컴포넌트
-    private ClockPanel clockPanel;       // 기존 깃허브 시계 컴포넌트
-    private ChatbotPanel chatbotPanel;   // 챗봇 패널 참조
+    private ClockPanel clockPanel;
+    private ChatbotPanel chatbotPanel;
 
-    private JPanel calendarPanelContainer;      // 중앙 위 캘린더 화면 (기존 upperEmptyPanel)
-    private JTabbedPane lowerTabbedPane; // 중앙 아래 탭 2개
-    private TodoItem todoItem;           // 체크리스트 컴포넌트
-    private CalendarPanel calendarPanel; // 달력 패널 참조
+    private JPanel calendarPanelContainer;
+    private JTabbedPane lowerTabbedPane;
+    private TodoItem todoItem;
+    private CalendarPanel calendarPanel;
 
-    private JSplitPane centerSplitPane;  // 중앙 영역 수직 분할
-
+    private JSplitPane centerSplitPane;
     private CardLayout mainCardLayout;
-    private JPanel mainPanel;            // 전체 화면 카드 레이아웃
+    private JPanel mainPanel;
 
-    // 색상 통일
     private final Color bgColor = new Color(214, 240, 255);
     private final Color borderColor = new Color(144, 198, 224);
     private final Color textColor = new Color(48, 80, 96);
@@ -220,7 +219,7 @@ public class MainFrame extends JFrame {
 }
 
 /**
- * 진서님 ui참고해서 ClockPanel 구현
+ * 시계 + 스톱워치 패널
  */
 class ClockPanel extends JPanel {
     private JLabel dateLabel;
@@ -240,17 +239,19 @@ class ClockPanel extends JPanel {
         timeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         timeLabel.setForeground(new Color(48, 80, 96));
 
-        add(Box.createVerticalStrut(200));
+        add(Box.createVerticalGlue());           //  위 공간 확보
         add(dateLabel);
         add(Box.createVerticalStrut(10));
         add(timeLabel);
-        add(Box.createVerticalGlue());
+        add(Box.createVerticalStrut(20));
+        add(new StopwatchPanel());
+        add(Box.createVerticalGlue());           // 아래 공간 확보
 
         Timer timer = new Timer(1000, e -> updateTime());
         timer.start();
-
         updateTime();
     }
+
 
     private void updateTime() {
         java.time.LocalDate date = java.time.LocalDate.now();
@@ -258,5 +259,77 @@ class ClockPanel extends JPanel {
 
         dateLabel.setText(date.toString());
         timeLabel.setText(time.toString());
+    }
+}
+
+/**
+ * 스톱워치 패널 (Thread 사용)
+ */
+class StopwatchPanel extends JPanel {
+    private JLabel timerLabel;
+    private JButton startButton, stopButton, resetButton;
+
+    private int seconds = 0;
+    private boolean running = false;
+    private Thread timerThread;
+
+    public StopwatchPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(new Color(214, 240, 255));
+
+        timerLabel = new JLabel("00:00", SwingConstants.CENTER);
+        timerLabel.setFont(new Font("맑은 고딕", Font.BOLD, 28));
+        timerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(new Color(214, 240, 255));
+
+        startButton = new JButton("시작");
+        stopButton = new JButton("정지");
+        resetButton = new JButton("리셋");
+
+        startButton.addActionListener(e -> start());
+        stopButton.addActionListener(e -> stop());
+        resetButton.addActionListener(e -> reset());
+
+        buttonPanel.add(startButton);
+        buttonPanel.add(stopButton);
+        buttonPanel.add(resetButton);
+
+        add(timerLabel);
+        add(Box.createVerticalStrut(5));
+        add(buttonPanel);
+    }
+
+    private void start() {
+        if (!running) {
+            running = true;
+            timerThread = new Thread(() -> {
+                while (running) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {}
+                    seconds++;
+                    SwingUtilities.invokeLater(this::updateLabel);
+                }
+            });
+            timerThread.start();
+        }
+    }
+
+    private void stop() {
+        running = false;
+    }
+
+    private void reset() {
+        running = false;
+        seconds = 0;
+        updateLabel();
+    }
+
+    private void updateLabel() {
+        int min = seconds / 60;
+        int sec = seconds % 60;
+        timerLabel.setText(String.format("%02d:%02d", min, sec));
     }
 }

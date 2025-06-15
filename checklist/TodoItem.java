@@ -22,9 +22,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 
+
 public class TodoItem extends JPanel implements ActionListener {
     private JButton addButton;
     private JPanel todoListPanel;
+    // 클래스 멤버 변수로 추가
+    private PieChartPanel pieChartPanel = new PieChartPanel();
+
 
     // 메모 관련 필드 추가
     private JTextArea memoArea;
@@ -33,7 +37,7 @@ public class TodoItem extends JPanel implements ActionListener {
     private boolean isLoadingMemo = false; // 메모 로딩 중인지 확인하는 플래그
 
     // JSON 파일 경로
-    private static final String DATA_FILE_PATH = "checklist/todo_data.json";
+    private static final String DATA_FILE_PATH = "src/checklist/todo_data.json";
 
     // 할일 목록을 저장할 리스트
     private final List<TodoData> todoList;
@@ -63,31 +67,30 @@ public class TodoItem extends JPanel implements ActionListener {
     // UI 초기 설정
     private void setupUI() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
 
-        // 상단 패널 (추가 버튼)
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.setBackground(Color.WHITE);
-
-        addButton = new JButton("+ 할일 추가");
-        addButton.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
-        addButton.addActionListener(this);
-        topPanel.add(addButton);
-
-        // 할일 목록 패널
+        // 왼쪽 체크리스트 패널
         todoListPanel = new JPanel();
         todoListPanel.setLayout(new BoxLayout(todoListPanel, BoxLayout.Y_AXIS));
-        todoListPanel.setBackground(Color.WHITE);
-
-        // 스크롤 패널
         JScrollPane scrollPane = new JScrollPane(todoListPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        // 상단에 추가 버튼
+        addButton = new JButton("할 일 추가");
+        addButton.addActionListener(this);
+
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(addButton);
+
+        // ✔️ 가운데 부분 : 체크리스트(왼쪽) + 파이차트(오른쪽)
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
+
+        pieChartPanel.setPreferredSize(new Dimension(300, 180)); // 오른쪽 너비 조정
+        centerPanel.add(pieChartPanel, BorderLayout.EAST); // 오른쪽에 PieChart
 
         add(topPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
     }
+
 
     // 메모 영역을 외부에서 등록하는 메서드
     public void setMemoArea(JTextArea memoArea) {
@@ -241,7 +244,6 @@ public class TodoItem extends JPanel implements ActionListener {
     }
 
     private void refreshUI() {
-        // 할일 목록 UI 새로고침
         todoListPanel.removeAll();
 
         for (int i = 0; i < todoList.size() && i < checkBoxList.size(); i++) {
@@ -250,6 +252,17 @@ public class TodoItem extends JPanel implements ActionListener {
 
             checkBox.setText(todo.title);
             checkBox.setSelected(todo.done);
+
+            //  기존 리스너 제거 후 새로 등록 (중복 방지)
+            for (ItemListener listener : checkBox.getItemListeners()) {
+                checkBox.removeItemListener(listener);
+            }
+
+            // 할일 체크 선택/해제 시 todo.done 업데이트 및 차트 갱신
+            checkBox.addItemListener(e -> {
+                todo.done = checkBox.isSelected();
+                updatePieChart(); // 그래프 업데이트
+            });
 
             JPanel todoPanel = new JPanel(new BorderLayout());
             todoPanel.setBackground(Color.WHITE);
@@ -261,12 +274,29 @@ public class TodoItem extends JPanel implements ActionListener {
 
         todoListPanel.add(Box.createVerticalGlue());
 
-        // 메모 영역도 함께 새로고침
         refreshMemoArea();
 
         revalidate();
         repaint();
+
+        updatePieChart(); //  전체 UI 갱신 후 차트도 업데이트
     }
+
+
+    private void updatePieChart() {
+        int total = todoList.size();
+        int completed = 0;
+
+        for (TodoData data : todoList) {
+            if (data.done) {
+                completed++;
+            }
+        }
+
+        pieChartPanel.updateData(completed, total);
+    }
+
+
 
     // 메모 영역을 새로고침하는 별도 메서드
     private void refreshMemoArea() {
@@ -423,6 +453,9 @@ public class TodoItem extends JPanel implements ActionListener {
 
         // 새로운 날짜의 데이터 로드
         loadTodoData();
+
+        //날짜 바뀌면 그래프도 업데이트
+        updatePieChart();
 
         // UI 새로고침 (메모 포함)
         refreshUI();

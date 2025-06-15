@@ -26,9 +26,9 @@ import java.time.format.DateTimeFormatter;
 public class TodoItem extends JPanel implements ActionListener {
     private JButton addButton;
     private JPanel todoListPanel;
+
     // 클래스 멤버 변수로 추가
     private PieChartPanel pieChartPanel = new PieChartPanel();
-
 
     // 메모 관련 필드 추가
     private JTextArea memoArea;
@@ -219,8 +219,8 @@ public class TodoItem extends JPanel implements ActionListener {
             } else {
                 System.out.println("사용자가 입력 취소");
             }
-        saveMemoData();     // 모든 이벤트 발생시 할일 내역 저장
         }
+        saveMemoData();     // 모든 이벤트 발생시 할일 내역 저장
     }
 
     public void addTodo(String title, boolean done) {
@@ -263,6 +263,7 @@ public class TodoItem extends JPanel implements ActionListener {
             checkBox.addItemListener(e -> {
                 todo.done = checkBox.isSelected();
                 updatePieChart(); // 그래프 업데이트
+                saveTodoData();   // 할일 저장
             });
 
             JPanel todoPanel = new JPanel(new BorderLayout());
@@ -387,15 +388,6 @@ public class TodoItem extends JPanel implements ActionListener {
                         JCheckBox checkBox = new JCheckBox(title, todo.done);
                         checkBox.setFont(new Font("맑은 고딕", Font.PLAIN, 12));
                         checkBox.setBackground(Color.WHITE);
-
-                        final TodoData finalTodo = todo;
-                        checkBox.addItemListener(new ItemListener() {
-                            @Override
-                            public void itemStateChanged(ItemEvent e) {
-                                finalTodo.done = checkBox.isSelected();
-                                saveTodoData();
-                            }
-                        });
 
                         checkBoxList.add(checkBox);
                     }

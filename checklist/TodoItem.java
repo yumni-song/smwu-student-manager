@@ -254,11 +254,6 @@ public class TodoItem extends JPanel implements ActionListener {
             checkBox.setText(todo.title);
             checkBox.setSelected(todo.done);
 
-            //  기존 리스너 제거 후 새로 등록 (중복 방지)
-            for (ItemListener listener : checkBox.getItemListeners()) {
-                checkBox.removeItemListener(listener);
-            }
-
             // 할일 체크 선택/해제 시 todo.done 업데이트 및 차트 갱신
             checkBox.addItemListener(e -> {
                 todo.done = checkBox.isSelected();

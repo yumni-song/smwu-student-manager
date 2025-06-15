@@ -73,6 +73,7 @@ public class MainFrame extends JFrame {
                         "효율적인 시간 관리와 목표 달성을 도와줍니다."
         );
         descriptionArea.setEditable(false);
+        descriptionArea.setFocusable(false);
         descriptionArea.setFont(new Font("맑은 고딕", Font.PLAIN, 18));
         descriptionArea.setForeground(textColor);
         descriptionArea.setBackground(bgColor);
@@ -244,6 +245,7 @@ class ClockPanel extends JPanel {
         add(Box.createVerticalStrut(10));
         add(timeLabel);
         add(Box.createVerticalStrut(20));
+        add(Box.createVerticalStrut(100));
         add(new StopwatchPanel());
         add(Box.createVerticalGlue());           // 아래 공간 확보
 
